@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ToDo List</title>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <h1><%= kindOfDay %></h1>
+
+    <div class="box" id="heading">
+        <h1><%= kindOfDay %></h1>
+    </div>
+    
 
     <ul>
         <% newListItems.forEach(item => { %>
