@@ -1,22 +1,22 @@
 module.exports.getDate  = () => {
-    let options = {
+    const options = {
         weekday: "long",
         day: "numeric",
         month: "long"
     };
 
-    let today = new Date();
+    const today = new Date();
 
     return today.toLocaleDateString("en-US", options);
 
 }
 
 module.exports.getDay = () => {
-    let options = {
+    const options = {
         weekday: "long"
     };
 
-    let today = new Date();
+    const today = new Date();
 
     return today.toLocaleDateString("en-US", options);
 
