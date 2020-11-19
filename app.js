@@ -2,7 +2,7 @@ const express = require("express");
 const body = require("body-parser");
 const mongoose = require("mongoose");
 
-const date = require(__dirname + "/date.js");
+// const date = require(__dirname + "/date.js");
 
 const app = express();
 
@@ -48,7 +48,7 @@ const List = mongoose.model("List", listSchema);
 
 app.get("/", function (req, res) {
 
-    let day = date.getDate();
+    // let day = date.getDate();
 
     Item.find({}, (err, foundItems) => {
         if (foundItems.length === 0) {
@@ -62,7 +62,7 @@ app.get("/", function (req, res) {
             res.redirect("/");
         } else {
             res.render("list", {
-                listTitle: day,
+                listTitle: "Today",
                 newListItems: foundItems
             });
         }
@@ -74,14 +74,26 @@ app.get("/", function (req, res) {
 app.post("/", (req, res) => {
 
     const itemName = req.body.newItem;
+    const listName = req.body.list;
 
     const item = new Item({
         name: itemName
     });
 
-    item.save();
+    if(listName === "Today") {
+        item.save();
 
     res.redirect("/");
+
+    } else {
+        List.findOne({name: listName}, (err, foundList) => {
+            foundList.items.push(item)
+            foundList.save();
+
+            res.redirect(`/${listName}`);
+        })
+    }
+    
 
 });
 
