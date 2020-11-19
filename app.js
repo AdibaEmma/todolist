@@ -14,7 +14,10 @@ app.use(body.urlencoded({
 
 app.use(express.static("public"));
 
-mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser: true,useUnifiedTopology: true});
+mongoose.connect("mongodb://localhost:27017/todolistDB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
 
 const itemsSchema = {
     name: String
@@ -22,65 +25,107 @@ const itemsSchema = {
 
 const Item = new mongoose.model("Item", itemsSchema);
 
-const item1 = new Item ({
-    name : "Buy Apples"
+const item1 = new Item({
+    name: "Buy Apples"
 });
 
-const item2 = new Item ({
-    name : "Read a book"
+const item2 = new Item({
+    name: "Read a book"
 });
 
-const item3 = new Item ({
-    name : "Play Game"
+const item3 = new Item({
+    name: "Play Game"
 });
 
 const defaultItems = [item1, item2, item3];
 
-// Item.insertMany(defaultItems, (err) => {
-//     if(err) {
-//         console.log(err);
-//     } else {
-//         console.log("items inserted successfully");
-//     }
-// });
+const listSchema = {
+    name: String,
+    items: [itemsSchema]
+}
 
-
-
+const List = mongoose.model("List", listSchema);
 
 app.get("/", function (req, res) {
 
     let day = date.getDate();
 
-  Item.find({}, (err, foundItems) => {
-    res.render("list", {
-        listTitle: day,
-        newListItems: foundItems
+    Item.find({}, (err, foundItems) => {
+        if (foundItems.length === 0) {
+            Item.insertMany(defaultItems, (err) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log("items inserted successfully");
+                }
+            });
+            res.redirect("/");
+        } else {
+            res.render("list", {
+                listTitle: day,
+                newListItems: foundItems
+            });
+        }
+
     });
-    });
-    
+
 });
 
 app.post("/", (req, res) => {
-    let item = req.body.newItem;
 
-    if (req.body.list === "Work") {
-        workItems.push(item);
+    const itemName = req.body.newItem;
 
-        res.redirect("/work")
-    } else {
-        items.push(item);
+    const item = new Item({
+        name: itemName
+    });
 
-        res.redirect("/");
-    }
+    item.save();
+
+    res.redirect("/");
 
 });
 
-app.get("/work", (req, res) => {
+app.post("/delete", (req, res) => {
+    const checkedItemId = req.body.checkbox;
 
-    res.render("list", {
-        listTitle: "Work List",
-        newListItems: workItems
+    Item.findByIdAndRemove(checkedItemId, (err) => {
+        if (err) {
+            console.log(err)
+        } else console.log("Item deleted successfully");
+
+        res.redirect("/");
+    })
+})
+
+app.get("/:customListName", (req, res) => {
+
+    const customListName = req.params.customListName;
+
+    List.findOne({name: customListName}, (err, foundList) => {
+        if(!err) {
+            if(!foundList) {
+                // Create a new list
+
+                const list = new List({
+                    name: customListName,
+                    items: defaultItems
+                });
+
+                list.save();
+
+                res.redirect(`/${customListName}`);
+            } else {
+                // Show an existing list
+
+                res.render("list", {
+                    listTitle: foundList.name,
+                    newListItems: foundList.items
+                });
+
+            }
+        }
     });
+
 });
 
 app.post("/work", (req, res) => {
@@ -91,11 +136,7 @@ app.post("/work", (req, res) => {
     res.redirect("/work");
 });
 
-app.get("/about", (req, res) => {
-    res.render("about");
-})
-
-const port = process.env.port || 3000;
+const port = 3000;
 
 app.listen(port, function () {
     console.log(`server listening on port ${port}`)
